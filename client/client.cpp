@@ -18,6 +18,32 @@ using std::string;
 using std::cout;
 using std::endl;
 
+int setNonblocking(int fd)
+{
+	int oldOption = fcntl(fd, F_GETFL);
+	int newOption = oldOption | O_NONBLOCK;
+	fcntl(fd, F_SETFL, newOption);
+	return oldOption;
+}
+
+void epollAdd(int epollFD, int fd, uint32_t events)
+{
+	epoll_event event;
+	event.data.fd = fd;
+	event.events = events;
+	epoll_ctl(epollFD, EPOLL_CTL_ADD, fd, &event);
+}
+
+sockaddr_in makeSockaddr_in(string ip, int port)
+{
+	sockaddr_in address;
+	memset(&address, 0, sizeof(address));
+	address.sin_family = AF_INET;
+	inet_pton(AF_INET, ip.c_str(), &address.sin_addr);
+	address.sin_port = htons(port);
+	return address;
+}
+
 int main(int argc, char *argv[])
 {
 	auto ip = argv[1];
@@ -30,11 +56,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	sockaddr_in address;
-	memset(&address, 0, sizeof(address));
-	address.sin_family = AF_INET;
-	inet_pton(AF_INET, ip, &address.sin_addr);
-	address.sin_port = htons(atoi(port));
+	auto address = makeSockaddr_in(ip, atoi(port));
 
 	epoll_event events[1024];
 	int epollFD = epoll_create1(0);
@@ -54,14 +76,9 @@ int main(int argc, char *argv[])
 	string message("client");
 	result = send(listenFD, message.c_str(), message.size(), 0);
 
-	int oldOption = fcntl(listenFD, F_GETFL);
-	int newOption = oldOption | O_NONBLOCK;
-	fcntl(listenFD, F_SETFL, newOption);
+	setNonblocking(listenFD);
 
-	epoll_event event;
-	event.data.fd = listenFD;
-	event.events = EPOLLIN;
-	epoll_ctl(epollFD, EPOLL_CTL_ADD, listenFD, &event);
+	epollAdd(epollFD, listenFD, EPOLLIN);
 
 	while (true)
 	{
