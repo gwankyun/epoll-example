@@ -1,0 +1,5 @@
+/client/obj/*
+/server/obj/*
+/client/bin/*
+/server/bin/*
+*.user
