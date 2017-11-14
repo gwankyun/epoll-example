@@ -61,10 +61,13 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\include;D:\include\x86_64-linux-gnu;$(IncludePath);$(ISenseIncludePath)</IncludePath>
+    <IncludePath>C:\Users\kyun\Documents\linux\include;C:\Users\kyun\Documents\linux\include\x86_64-linux-gnu;..\common;$(IncludePath);$(ISenseIncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="client.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\socket_common.h" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

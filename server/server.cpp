@@ -14,43 +14,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <socket_common.h>
 using std::string;
 using std::cout;
 using std::endl;
-
-int setNonblocking(int fd)
-{
-    int oldOption = fcntl(fd, F_GETFL);
-    int newOption = oldOption | O_NONBLOCK;
-    fcntl(fd, F_SETFL, newOption);
-    return oldOption;
-}
-
-void epollAdd(int epollFD, int fd, uint32_t events)
-{
-    epoll_event event;
-    event.data.fd = fd;
-    event.events = events;
-    epoll_ctl(epollFD, EPOLL_CTL_ADD, fd, &event);
-}
-
-void epollMod(int epollFD, int fd, uint32_t events)
-{
-    epoll_event event;
-    event.data.fd = fd;
-    event.events = events;
-    epoll_ctl(epollFD, EPOLL_CTL_MOD, fd, &event);
-}
-
-sockaddr_in makeSockaddr_in(string ip, int port)
-{
-    sockaddr_in address;
-    memset(&address, 0, sizeof(address));
-    address.sin_family = AF_INET;
-    inet_pton(AF_INET, ip.c_str(), &address.sin_addr);
-    address.sin_port = htons(port);
-    return address;
-}
 
 int main(int argc, char *argv[])
 {
@@ -95,7 +62,7 @@ int main(int argc, char *argv[])
     while (true)
     {
         int number = epoll_wait(epollFD, events, 1024, -1);
-        for (size_t i = 0; i < number; i++)
+        for (auto i = 0; i < number; i++)
         {
             auto ev = events[i];
             int fd = ev.data.fd;
@@ -120,7 +87,7 @@ int main(int argc, char *argv[])
             {
                 char buffer[1024];
                 memset(buffer, 0, sizeof(buffer));
-                result = recv(fd, buffer, sizeof(buffer), 0);
+                recv(fd, buffer, sizeof(buffer), 0);
                 cout << buffer << endl;
 
                 epollMod(epollFD, fd, EPOLLOUT);
@@ -128,7 +95,7 @@ int main(int argc, char *argv[])
             else if (ev.events & EPOLLOUT)
             {
                 string message("server");
-                result = send(fd, message.c_str(), message.size(), 0);
+                send(fd, message.c_str(), message.size(), 0);
             }
         }
     }
